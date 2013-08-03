@@ -1,0 +1,135 @@
+A DNS based namespace for hacker research
+
+The Dartmouth Scooby Crew 
+Introduction
+================================================================================
+
+Over the last years, the volume of hacker research has grown
+immensely, yet we still rely on ad-hoc methods to archive and index
+our work, such as archives maintained by the conferences, private
+collections and en-vogue cloud services like YouTube. Because access
+to these collections is non-uniform (every conference has a slightly
+different system, furthermore e.g. the DEFCON website looks different
+every year). Finding the particular version of a paper published in a
+smaller hacker conference (e.g. PXE) or journal will be nontrivial.
+
+We believe that one of the key obstacles to proper archival is the
+lack of a uniform namespace. \todo{Rant about namespaces?}.
+
+Academia has long argued for the benefits of proper naming (and by
+extension, archival), however the implemented naming scheme (journal
+name, author name, title), which places the burden of archival both on
+librarians dedicated to this purpose and on the journal publishers,
+translates poorly to the hacker community and its rapidly evolving,
+rather volatile publication venues. As the same scalability issues are
+beginning to affect traditional academic publishing, other solutions
+like DOI have evolved, however they are neither widely used nor
+practical. \todo{Parallel between current academic archival and ad-hoc
+hackers, yet without the librarians. Librarians are expensive}
+
+Therefore, we propose our namespace for hacker research based on the
+domain name system (RFC XXX). DNS allows names to be hierarchical,
+delegated and human-readable, properties that while originally
+intended to name Internet hosts are useful for naming research works.
+Delegation allows the system to continue functioning without the
+attention (or bias) of a central authority, whereas human-readable and
+writable names are a must for practical use.
+
+Details =======
+
+ The Hacker Name Space (HNS, pronounced Phrackademic) can
+be any hosted in any zone of the global DNS, although the authors will
+intend to use spargelze.it and weirdmachin.es as canonical root
+domains. For brevity, all other domain names in the text will be
+relative to this root (i.e. foo. actually refers to
+foo.weirdmachin.es.) and terms from RFC XXXX will be used.
+
+We define a multi-layered hierarchy to classify publications. The top
+layer of the hierarchy specifies the mode of publication (e.g. paper,
+conference), the next layer the particular venue(e.g. Phrack, CCC),
+with one or more layers specifying the particular instance of that
+venue (e.g. 1st Confidence and 2nd Confidence in 20xx). The last layer
+of the hierarchy is the particular paper or talk. # Each paper or talk
+contains sub-records describing various attributes of the talk( #as
+described below) and the layers of the hierarchy above that contain
+both sub-# zones and leaf n
+
+Root
+====
+The HNS root contains subzones for various venues of publication
+Name         Aliases       Intended use
+conference.  con., c.      Conferences and similar venues:
+      Each conference must be encoded in a subzone of the format
+      name.c, e.g. def.con., ccc.con, toor.con. The next layer in the
+      hierarchy must specify the year the conference occured (e.g.
+      2012.def.con), with an optional additional layer to further
+      specify a particular instance of a conference (i.e.
+      seattle.2011.toor.con)
+
+
+journal.     j.            Journals, with some process of review and a public submission process (e.g. no company/personal blogs or marketing outlets). 
+
+             Each journal must use a consistent way to label its
+             issues, such as (69.phrack.org) using as many layers as
+             deemed appropriate by that journal or its archivers.
+
+misc.        m.            Other venues of publication. A forthcoming informal process will be used to create subzones(e.g. twitter. ).
+
+blog.        b.            Possible subzones for blogs and other non-reviewed web versions.
+Venue
+=====
+Each edition of a particular venue receives a zone according to the above naming scheme (e.g. 2013.pxe.con.), which should be delegated to another archivist (typically, the conference organizer). This archivist assigns arbitrary, but immutable subzone names for each publication in this venue (i.e. elf-metadata.2012.def.con), the contents of which is described below.
+
+Each venue may contain the following descriptive sub-records
+Name         Type         Description and Example
+x_date       TXT          Date range (x_date.2012.def.con: dd.mm.2012--dd.mm.2012)
+x_www        TXT          Website (x_www.2013.confidence.con: 2013.confidence.org.pl)
+x_www         A            Redirect to the above, served from redir.weirdmachin.es ?  TBD
+x_archivist  TXT          Email address of the person who created this archive 
+                        (x_archive.2015.langsec.con: pastor@phrack.org)
+
+
+All subzones beginning with x_ are reserved for conference metadata, as opposed to conference entries.
+
+Publication record:
+===================
+Name         Type         Description and Example
+.            A            Website redirecting to the paper
+paper.                                    paper
+slides.      TXT          URL pointing to slides 
+code.                                     code
+video.                                    video
+                          (note, maybe the above should also have an A record to them)
+
+title        TXT          Full title
+firstauthor  DNAME        First author
+authors      TXT          comma separated zone names of the authors                                  
+(1,2,..).authors DNAME/subzone    Authors, in order
+date         TXT          Date of publication
+alt          TXT         Alternative names for this publication(if a similar talk is presented multiple times). In chronological order
+(1,2,3,4,.).alternatives  DNAME The above, as DNAMEs
+
+firstpub.     DNAME       1.alternatives. 
+bib.c          TXT          BibTex publication record
+mla.c          TXT          MLA publication record
+               .
+               .
+               .
+     
+
+Author records
+==============
+Initially, every paper zone will contain subzones for its author records, with the format described below. In order to allow identity management of authors (and reduce the size of the HNS), any author can receive a subzone xxxxx.person. (xxxxx.p.) where xxxxx is a SHA-2 hash of the authors public key. With the corresponding private key, the author will be able to update the descriptive records (marked with a D below) in his zone:
+
+Name       Type  Description
+website.   TXT   URL of the authors website (D)
+.          A     Either under the authors control or a redirect to the contents of website.     (D)
+mail.      TXT   The authors email(D)
+twitter.   TXT   The authors twitter handle(D)
+name.      TXT   The authors preferred handle or name
+handle.    TXT   A version of the above containing only the characters allowed in RFC 1035
+
+For convenience, the maintainers of the HNS will provide a handle. namespace which contains human readable DNAME records.
+Alternative query means:
+========================
+As the Quux suggested, DNS is not a great means to encode a graph database, but it has scalability and interoperability benefits. In the future, it would be interesting to explore integration of another query mechanism (say, LDAP).
